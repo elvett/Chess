@@ -9,4 +9,13 @@ export class King extends Figure {
         this.name = FigureName.King;
         this.logo = color === Color.Black ? "/chessP/king1.png" : "/chessP/king.png"; // Use correct image names
     }
+    
+    canMove(target: Cell): boolean {
+        if (!super.canMove(target))
+            return false;
+        const directionX = Math.abs(this.cell.x - target.x);
+        const directionY = Math.abs(this.cell.y - target.y);
+        return ( directionX === 1 || directionY === 1);
+         
+    }
 }

@@ -53,7 +53,7 @@ export class Cell {
   }
 
   isEmptyDiagonal(target: Cell): boolean { 
-    const absX = Math.abs(target.x - this.x)
+    const absX = Math.abs(target.x - this.x);
     const absY = Math.abs(target.y - this.y);
     if(absX !== absY)
       return false;
