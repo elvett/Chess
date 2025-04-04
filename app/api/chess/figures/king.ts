@@ -15,7 +15,7 @@ export class King extends Figure {
             return false;
         const directionX = Math.abs(this.cell.x - target.x);
         const directionY = Math.abs(this.cell.y - target.y);
-        return ( directionX === 1 || directionY === 1);
+        return directionX <= 1 && directionY <= 1;
          
     }
 }
