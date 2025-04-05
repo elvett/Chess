@@ -15,7 +15,7 @@ export class Figure {
     color: Color;
     cell: Cell;
     name: FigureName;
-    logo: string | null; // Use string for public images
+    logo: string | null; 
     id: number;
 
     constructor(color: Color, cell: Cell, logo: string | null = null) {
@@ -27,15 +27,11 @@ export class Figure {
         this.id = Math.random();
     }
 
+
     canMove(target: Cell): boolean {
         if (target.figure?.color === this.color)
             return false
-        if (target.figure?.name === FigureName.King)
-            return false
         return true;
     }
-
-    move(target: Cell) {
-        this.cell = target; 
-    }
+    
 }

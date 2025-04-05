@@ -28,6 +28,7 @@ export class Board {
         return this.cells[y]?.[x] || null;
     }
 
+    
     private addPawns() {
         for (let i = 0; i < 8; i++) {
             new Pawn(Color.Black, this.getCell(i, 1)!);
