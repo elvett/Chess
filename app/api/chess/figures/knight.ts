@@ -1,4 +1,3 @@
-import { match } from "assert";
 import { Cell } from "../Cell";
 import { Color } from "../Color";
 import { Figure } from "../Figure";

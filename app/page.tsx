@@ -5,6 +5,7 @@ import { Cell } from "./api/chess/Cell";
 import { Player } from "./api/chess/Player";
 import { Color } from "./api/chess/Color";
 import Timer from "./components/chess/timer";
+import { GameLogic } from "./api/chess/GameLogic";
 
 const App: React.FC = () => {
   const [board, setBoard] = useState<Board | null>(null);
@@ -12,8 +13,9 @@ const App: React.FC = () => {
   const [availableMoves, setAvailableMoves] = useState<Cell[]>([]);
   const [attackMoves, setAttackMoves] = useState<Cell[]>([]);
   const [WhitePlayer] = useState(new Player(Color.White));
-  const [BlackPlayer] = useState(new Player(Color.Black));
+  const [BlackPlayer] = useState(new Player(Color.Black));  
   const [currentPlayer, setCurrentPlayer] = useState<Player>(WhitePlayer);
+  const [gameLogic, setGameLogic] = useState<GameLogic | null>(null);
 
   useEffect(() => {
     restart();
@@ -28,6 +30,7 @@ const App: React.FC = () => {
     newBoard.initCells();
     newBoard.addFigures();
     setBoard(newBoard);
+    setGameLogic(new GameLogic(newBoard));
     setSelectedCell(null);
     setAvailableMoves([]);
     setAttackMoves([]);
@@ -35,7 +38,7 @@ const App: React.FC = () => {
   }, [WhitePlayer]);
 
   const handleCellClick = useCallback((cell: Cell) => {
-    if (!board || !currentPlayer) return;
+    if (!board || !currentPlayer || !gameLogic) return;
 
     if (!selectedCell) {
       selectCell(cell);
@@ -49,25 +52,28 @@ const App: React.FC = () => {
       return;
     }
 
-    if (selectedCell.canReallyMove(cell)) {
-      selectedCell.move(cell);
-      setSelectedCell(null);
-      setAvailableMoves([]);
-      setAttackMoves([]);
-      const updatedBoard = new Board();
-      updatedBoard.cells = board.cells;
-      setBoard(updatedBoard);
-      swapPlayer();
+    if (selectedCell.figure) {
+      const moveSuccessful = gameLogic.moveFigure(selectedCell, cell);
+      if (moveSuccessful) {
+        setSelectedCell(null);
+        setAvailableMoves([]);
+        setAttackMoves([]);
+        const updatedBoard = new Board();
+        updatedBoard.cells = board.cells;
+        setBoard(updatedBoard);
+        setGameLogic(new GameLogic(updatedBoard));
+        swapPlayer();
+      }
     } else {
       selectCell(cell);
     }
-  }, [board, currentPlayer, selectedCell, swapPlayer]);
+  }, [board, currentPlayer, selectedCell, swapPlayer, gameLogic]);
 
   const selectCell = useCallback((cell: Cell) => {
-    if (!board || !currentPlayer) return;
+    if (!board || !currentPlayer || !gameLogic) return;
 
     if (cell.figure && cell.figure.color === currentPlayer.color) {
-      const moves = board.cells.flat().filter(target => cell.canReallyMove(target));
+      const moves = board.cells.flat().filter(target => gameLogic.canReallyMove(cell, target)); 
       const attacks = moves.filter(move => move.figure !== null);
       setAvailableMoves(moves);
       setAttackMoves(attacks);
@@ -77,7 +83,7 @@ const App: React.FC = () => {
       setAvailableMoves([]);
       setAttackMoves([]);
     }
-  }, [board, currentPlayer]);
+  }, [board, currentPlayer, gameLogic]);
 
   if (!board) return <div className="loading">Loading chess game...</div>;
 
