@@ -7,7 +7,7 @@ export class Queen extends Figure {
     constructor(color: Color, cell: Cell) {
         super(color, cell);
         this.name = FigureName.Queen;
-        this.logo = color === Color.Black ? "/chessP/queen1.png" : "/chessP/queen.png"; // Use correct image names
+        this.logo = color === Color.Black ? "/chessP/queen1.png" : "/chessP/queen.png"; 
     }
     canMove(target: Cell): boolean {
         if (!super.canMove(target))

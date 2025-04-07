@@ -7,7 +7,7 @@ export class Rook extends Figure {
     constructor(color: Color, cell: Cell) {
         super(color, cell);
         this.name = FigureName.Rook;
-        this.logo = color === Color.Black ? "/chessP/rook1.png" : "/chessP/rook.png"; // Use correct image names
+        this.logo = color === Color.Black ? "/chessP/rook1.png" : "/chessP/rook.png"; 
     }
 
     canMove(target: Cell): boolean {

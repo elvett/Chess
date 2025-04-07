@@ -7,7 +7,7 @@ export class bishop extends Figure {
     constructor(color: Color, cell: Cell) {
         super(color, cell);
         this.name = FigureName.Bishop;
-        this.logo = color === Color.Black ? "/chessP/bishop1.png" : "/chessP/bishop.png"; // Use correct image names
+        this.logo = color === Color.Black ? "/chessP/bishop1.png" : "/chessP/bishop.png"; 
     }
 
     canMove(target: Cell): boolean {

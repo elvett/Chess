@@ -11,7 +11,7 @@ export class Pawn extends Figure {
         this.name = FigureName.Pawn;
         this.logo = color === Color.Black 
             ? "/chessP/pawn1.png" 
-            : "/chessP/pawn.png"; // Use correct image names
+            : "/chessP/pawn.png"; 
     }
 
     canMove(target: Cell): boolean {

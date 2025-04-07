@@ -5,9 +5,11 @@ import { Cell } from "./Cell";
 
 export class GameLogic {
   board: Board;
+  moveHistory: MoveHistory[];
 
   constructor(board: Board) {
     this.board = board;
+    this.moveHistory = [];
   }
 
   moveFigure(from: Cell, to: Cell): boolean {
@@ -33,6 +35,7 @@ export class GameLogic {
       for (let y = 0; y < 8; y++) {
         const cell = this.board.getCell(x, y);
         if (!cell || !cell.figure) continue;
+
         if (cell.figure.color !== playerColor && cell.figure.canMove(kingCell)) {
           return true;
         }
@@ -41,11 +44,36 @@ export class GameLogic {
     return false;
   }
 
+  isCheckmate(playerColor: Color): boolean {
+    if (!this.isKingInCheck(playerColor)) return false;
+
+    for (let x = 0; x < 8; x++) {
+      for (let y = 0; y < 8; y++) {
+        const from = this.board.getCell(x, y);
+        if (!from || !from.figure || from.figure.color !== playerColor) continue;
+
+        for (let dx = 0; dx < 8; dx++) {
+          for (let dy = 0; dy < 8; dy++) {
+            const to = this.board.getCell(dx, dy);
+            if (!to) continue;
+
+            if (this.canReallyMove(from, to)) {
+              return false; 
+            }
+          }
+        }
+      }
+    }
+
+    return true; 
+  }
+
   private findKing(playerColor: Color): Cell | null {
     for (let x = 0; x < 8; x++) {
       for (let y = 0; y < 8; y++) {
         const cell = this.board.getCell(x, y);
         if (!cell || !cell.figure) continue;
+
         if (cell.figure.name === FigureName.King && cell.figure.color === playerColor) {
           return cell;
         }
@@ -59,7 +87,7 @@ export class GameLogic {
 
     const currentFigure = from.figure;
     const capturedFigure = target.figure;
-
+  
     target.setFigure(currentFigure);
     from.setFigure(null);
 

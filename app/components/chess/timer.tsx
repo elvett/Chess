@@ -1,51 +1,81 @@
-import React, { FC, useEffect, useRef, useState } from "react";
+import React, { FC, useEffect, useRef, useState, useCallback } from "react";
 import { Player } from "../../api/chess/Player";
 import { Color } from "../../api/chess/Color";
 
 interface TimerProps {
   currentPlayer: Player | null;
   restart: () => void;
+  winner?: Color | null;
+  onTimeout?: (loserColor: Color) => void;
 }
 
-const Timer: FC<TimerProps> = ({ currentPlayer, restart }) => {
+const Timer: FC<TimerProps> = ({ currentPlayer, restart, winner, onTimeout }) => {
   const [withTimer, setWithTimer] = useState<boolean>(true);
   const [initialMinutes, setInitialMinutes] = useState(5);
   const [blackTime, setBlackTime] = useState(initialMinutes * 60);
   const [whiteTime, setWhiteTime] = useState(initialMinutes * 60);
   const timer = useRef<null | ReturnType<typeof setInterval>>(null);
 
+  const handleTimeout = useCallback(
+    (color: Color) => {
+      if (onTimeout) {
+        onTimeout(color);
+      }
+      if (timer.current) clearInterval(timer.current);
+    },
+    [onTimeout]
+  );
+
   useEffect(() => {
-    if (withTimer) {
-      startTimer();
+    if (winner || !withTimer) {
+      if (timer.current) clearInterval(timer.current);
+      return;
     }
+
+    startTimer();
+
     return () => {
       if (timer.current) clearInterval(timer.current);
     };
-  }, [currentPlayer, withTimer]);
+  }, [currentPlayer, withTimer, winner]);
 
   const startTimer = () => {
     if (timer.current) clearInterval(timer.current);
-    if (!withTimer) return;
+    if (!withTimer || winner) return;
+
     const callback =
       currentPlayer?.color === Color.White
         ? decrementWhiteTimer
         : decrementBlackTimer;
+
     timer.current = setInterval(callback, 1000);
   };
 
   const decrementBlackTimer = () => {
-    setBlackTime((prev) => Math.max(prev - 1, 0));
+    setBlackTime((prev) => {
+      if (prev <= 1) {
+        setTimeout(() => handleTimeout(Color.Black), 0); 
+        return 0;
+      }
+      return prev - 1;
+    });
   };
 
   const decrementWhiteTimer = () => {
-    setWhiteTime((prev) => Math.max(prev - 1, 0));
+    setWhiteTime((prev) => {
+      if (prev <= 1) {
+        setTimeout(() => handleTimeout(Color.White), 0); // Defer the timeout update
+        return 0;
+      }
+      return prev - 1;
+    });
   };
 
   const handleRestart = () => {
     setWhiteTime(initialMinutes * 60);
     setBlackTime(initialMinutes * 60);
     restart();
-    if (withTimer) startTimer();
+    if (withTimer && !winner) startTimer();
   };
 
   const formatTime = (seconds: number) => {
@@ -69,18 +99,20 @@ const Timer: FC<TimerProps> = ({ currentPlayer, restart }) => {
         height: "100%",
       }}
     >
-      <label style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "10px",
-        color: "#ecf0f1",
-        fontWeight: "500"
-      }}>
+      <label
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+          color: "#ecf0f1",
+          fontWeight: "500",
+        }}
+      >
         <input
           type="checkbox"
           checked={withTimer}
           onChange={() => {
-            setWithTimer(prev => !prev);
+            setWithTimer((prev) => !prev);
             if (timer.current) clearInterval(timer.current);
           }}
           style={{ cursor: "pointer" }}
@@ -90,12 +122,14 @@ const Timer: FC<TimerProps> = ({ currentPlayer, restart }) => {
 
       {withTimer && (
         <>
-          <label style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "5px",
-            color: "#ecf0f1"
-          }}>
+          <label
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "5px",
+              color: "#ecf0f1",
+            }}
+          >
             Time per player (min):
             <input
               type="number"
@@ -104,8 +138,6 @@ const Timer: FC<TimerProps> = ({ currentPlayer, restart }) => {
               onChange={(e) => {
                 const newMinutes = Math.max(1, Number(e.target.value));
                 setInitialMinutes(newMinutes);
-                setWhiteTime(newMinutes * 60);
-                setBlackTime(newMinutes * 60);
               }}
               style={{
                 padding: "8px",
@@ -113,59 +145,73 @@ const Timer: FC<TimerProps> = ({ currentPlayer, restart }) => {
                 border: "1px solid #7f8c8d",
                 width: "100px",
                 backgroundColor: "#2c3e50",
-                color: "#ecf0f1"
+                color: "#ecf0f1",
               }}
             />
           </label>
 
-          <div style={{
-            background: currentPlayer?.color === Color.Black 
-              ? "linear-gradient(135deg, #2c3e50, #1a252f)" 
-              : "#34495e",
-            padding: "20px",
-            borderRadius: "12px",
-            border: currentPlayer?.color === Color.Black 
-              ? "2px solid #3498db" 
-              : "2px solid #7f8c8d",
-            boxShadow: currentPlayer?.color === Color.Black 
-              ? "0 0 15px rgba(52, 152, 219, 0.5)" 
-              : "0 4px 10px rgba(0, 0, 0, 0.2)",
-            transition: "all 0.3s ease",
-          }}>
-            <h2 style={{
-              color: getTimeColor(blackTime),
-              margin: "0 0 10px 0",
-              fontSize: "1.8rem",
-              textAlign: "center",
-              textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
-              fontWeight: "600",
-            }}>
+          <div
+            style={{
+              background:
+                currentPlayer?.color === Color.Black
+                  ? "linear-gradient(135deg, #2c3e50, #1a252f)"
+                  : "#34495e",
+              padding: "20px",
+              borderRadius: "12px",
+              border:
+                currentPlayer?.color === Color.Black
+                  ? "2px solid #3498db"
+                  : "2px solid #7f8c8d",
+              boxShadow:
+                currentPlayer?.color === Color.Black
+                  ? "0 0 15px rgba(52, 152, 219, 0.5)"
+                  : "0 4px 10px rgba(0, 0, 0, 0.2)",
+              transition: "all 0.3s ease",
+            }}
+          >
+            <h2
+              style={{
+                color: getTimeColor(blackTime),
+                margin: "0 0 10px 0",
+                fontSize: "1.8rem",
+                textAlign: "center",
+                textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
+                fontWeight: "600",
+              }}
+            >
               Black: {formatTime(blackTime)}
             </h2>
           </div>
 
-          <div style={{
-            background: currentPlayer?.color === Color.White 
-              ? "linear-gradient(135deg, #2c3e50, #1a252f)" 
-              : "#34495e",
-            padding: "20px",
-            borderRadius: "12px",
-            border: currentPlayer?.color === Color.White 
-              ? "2px solid #3498db" 
-              : "2px solid #7f8c8d",
-            boxShadow: currentPlayer?.color === Color.White 
-              ? "0 0 15px rgba(52, 152, 219, 0.5)" 
-              : "0 4px 10px rgba(0, 0, 0, 0.2)",
-            transition: "all 0.3s ease",
-          }}>
-            <h2 style={{
-              color: getTimeColor(whiteTime),
-              margin: 0,
-              fontSize: "1.8rem",
-              textAlign: "center",
-              textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
-              fontWeight: "600",
-            }}>
+          <div
+            style={{
+              background:
+                currentPlayer?.color === Color.White
+                  ? "linear-gradient(135deg, #2c3e50, #1a252f)"
+                  : "#34495e",
+              padding: "20px",
+              borderRadius: "12px",
+              border:
+                currentPlayer?.color === Color.White
+                  ? "2px solid #3498db"
+                  : "2px solid #7f8c8d",
+              boxShadow:
+                currentPlayer?.color === Color.White
+                  ? "0 0 15px rgba(52, 152, 219, 0.5)"
+                  : "0 4px 10px rgba(0, 0, 0, 0.2)",
+              transition: "all 0.3s ease",
+            }}
+          >
+            <h2
+              style={{
+                color: getTimeColor(whiteTime),
+                margin: 0,
+                fontSize: "1.8rem",
+                textAlign: "center",
+                textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",
+                fontWeight: "600",
+              }}
+            >
               White: {formatTime(whiteTime)}
             </h2>
           </div>

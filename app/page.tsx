@@ -7,6 +7,7 @@ import { Color } from "./api/chess/Color";
 import Timer from "./components/chess/timer";
 import { GameLogic } from "./api/chess/GameLogic";
 
+
 const App: React.FC = () => {
   const [board, setBoard] = useState<Board | null>(null);
   const [selectedCell, setSelectedCell] = useState<Cell | null>(null);
@@ -16,12 +17,15 @@ const App: React.FC = () => {
   const [BlackPlayer] = useState(new Player(Color.Black));  
   const [currentPlayer, setCurrentPlayer] = useState<Player>(WhitePlayer);
   const [gameLogic, setGameLogic] = useState<GameLogic | null>(null);
+  const [winner, setWinner] = useState<Color | null>(null);
+  const [turn, setTurn] = useState(0);
 
   useEffect(() => {
     restart();
   }, []);
 
   const swapPlayer = useCallback(() => {
+    setTurn(prevTurn => prevTurn + 0.5)
     setCurrentPlayer(prev => prev === WhitePlayer ? BlackPlayer : WhitePlayer);
   }, [WhitePlayer, BlackPlayer]);
 
@@ -35,10 +39,11 @@ const App: React.FC = () => {
     setAvailableMoves([]);
     setAttackMoves([]);
     setCurrentPlayer(WhitePlayer);
+    setWinner(null);
   }, [WhitePlayer]);
 
   const handleCellClick = useCallback((cell: Cell) => {
-    if (!board || !currentPlayer || !gameLogic) return;
+    if (!board || !currentPlayer || !gameLogic || winner) return;
 
     if (!selectedCell) {
       selectCell(cell);
@@ -58,16 +63,26 @@ const App: React.FC = () => {
         setSelectedCell(null);
         setAvailableMoves([]);
         setAttackMoves([]);
+
         const updatedBoard = new Board();
         updatedBoard.cells = board.cells;
         setBoard(updatedBoard);
-        setGameLogic(new GameLogic(updatedBoard));
+        const newLogic = new GameLogic(updatedBoard);
+        setGameLogic(newLogic);
+
+        const opponentColor = currentPlayer.color === Color.White ? Color.Black : Color.White;
+        const isMate = newLogic.isCheckmate(opponentColor);
+        if (isMate) {
+          setWinner(currentPlayer.color);
+          return;
+        }
+
         swapPlayer();
       }
     } else {
       selectCell(cell);
     }
-  }, [board, currentPlayer, selectedCell, swapPlayer, gameLogic]);
+  }, [board, currentPlayer, selectedCell, swapPlayer, gameLogic, winner]);
 
   const selectCell = useCallback((cell: Cell) => {
     if (!board || !currentPlayer || !gameLogic) return;
@@ -84,6 +99,11 @@ const App: React.FC = () => {
       setAttackMoves([]);
     }
   }, [board, currentPlayer, gameLogic]);
+
+
+  const handleTimeout = useCallback((loserColor: Color) => {
+    setWinner(loserColor === Color.White ? Color.Black : Color.White);
+  }, []);
 
   if (!board) return <div className="loading">Loading chess game...</div>;
 
@@ -114,18 +134,32 @@ const App: React.FC = () => {
         }}>
           Chess Game
         </h1>
-        <h2 style={{
-          color: "#ecf0f1",
-          backgroundColor: "#34495e",
-          padding: "8px 16px",
-          borderRadius: "20px",
-          margin: 0,
-          boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
-          marginBottom: "15px",
-          textAlign: "center"
-        }}>
-          Turn: {currentPlayer.color === Color.White ? "White" : "Black"}
-        </h2>
+        {winner && (
+          <h2 style={{
+            color: "#e74c3c",
+            backgroundColor: "#2c3e50",
+            padding: "10px 20px",
+            borderRadius: "15px",
+            marginBottom: "10px",
+            boxShadow: "0 2px 5px rgba(0,0,0,0.2)"
+          }}>
+            {winner === Color.White ? "White" : "Black"} wins!
+          </h2>
+        )}
+        {!winner && (
+          <h2 style={{
+            color: "#ecf0f1",
+            backgroundColor: "#34495e",
+            padding: "8px 16px",
+            borderRadius: "20px",
+            margin: 0,
+            boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
+            marginBottom: "15px",
+            textAlign: "center"
+          }}>
+            Turn: {currentPlayer.color === Color.White ? "White" : "Black"} {turn}
+          </h2>
+        )}
         <div style={{
           display: "grid",
           gridTemplateColumns: `repeat(8, ${cellSize}px)`,
@@ -213,6 +247,8 @@ const App: React.FC = () => {
         <Timer
           currentPlayer={currentPlayer}
           restart={restart}
+          winner={winner}
+          onTimeout={handleTimeout}
         />
       </div>
     </div>
