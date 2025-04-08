@@ -7,11 +7,11 @@ import { Rook } from "./figures/Rook";
 
 export class GameLogic {
   board: Board;
-  moveHistory: MoveHistory[];
+  // moveHistory: MoveHistory[];
 
   constructor(board: Board) {
     this.board = board;
-    this.moveHistory = [];
+    // this.moveHistory = [];
   }
 
   moveFigure(from: Cell, to: Cell): boolean {
