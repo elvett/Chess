@@ -8,7 +8,7 @@ export class King extends Figure {
     constructor(color: Color, cell: Cell) {
         super(color, cell);
         this.name = FigureName.King;
-        this.logo = color === Color.Black ? "/chessP/king1.png" : "/chessP/king.png";
+        this.logo = color === Color.Black ? "./chessP/king1.png" : "./chessP/king.png";
         this.FirstMove = true;
     }
     

@@ -7,7 +7,7 @@ export class Knight extends Figure {
     constructor(color: Color, cell: Cell) {
         super(color, cell);
         this.name = FigureName.Knight;
-        this.logo = color === Color.Black ? "/chessP/knight1.png" : "/chessP/knight.png";
+        this.logo = color === Color.Black ? "./chessP/knight1.png" : "./chessP/knight.png";
     }
     
     canMove(target: Cell): boolean {

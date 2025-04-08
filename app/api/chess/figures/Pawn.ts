@@ -10,8 +10,8 @@ export class Pawn extends Figure {
         super(color, cell);
         this.name = FigureName.Pawn;
         this.logo = color === Color.Black 
-            ? "/chessP/pawn1.png" 
-            : "/chessP/pawn.png"; 
+            ? "./chessP/pawn1.png" 
+            : "./chessP/pawn.png"; 
     }
 
     canMove(target: Cell): boolean {
