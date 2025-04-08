@@ -1,6 +1,6 @@
-interface MoveHistory {
-    from: string; 
-    to: string; 
-    fen: string;
-  }
+// interface MoveHistory {
+//     from: string; 
+//     to: string; 
+//     fen: string;
+//   }
   

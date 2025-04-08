@@ -1,4 +1,4 @@
-import { Figure, FigureName } from "./Figure";
+import { Figure} from "./Figure";
 import { Color } from "./Color";
 import { Board } from "./board";
 
@@ -71,10 +71,10 @@ export class Cell {
     }
     return true;
   }
-  
+
   isUnderAttack(color: Color): boolean {
-    for (let row of this.board.cells) {
-        for (let cell of row) {
+    for (const row of this.board.cells) {
+        for (const cell of row) {
             const figure = cell.figure;
             if (figure && figure.color !== color) {
                 if (figure.canMove(this)) {
