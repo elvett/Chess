@@ -2,6 +2,8 @@ import { Board } from "./board";
 import { FigureName } from "./Figure";
 import { Color } from "./Color";
 import { Cell } from "./Cell";
+import { King } from "./figures/king";
+import { Rook } from "./figures/Rook";
 
 export class GameLogic {
   board: Board;
@@ -18,9 +20,52 @@ export class GameLogic {
     }
 
     const movingFigure = from.figure;
+
+    if (movingFigure instanceof King) {
+      movingFigure.FirstMove = false;
+      
+      if (this.isCastling(from, to,)) {
+        return this.performCastling(from, to, movingFigure);
+      }
+    }
+
+    if (movingFigure instanceof Rook) {
+      movingFigure.FirstMove = false;
+    }
+
     to.setFigure(movingFigure);
     from.setFigure(null);
+
     return true;
+  }
+
+  private isCastling(from: Cell, to: Cell): boolean {
+    return to.x === from.x + 2 || to.x === from.x - 2;
+  }
+
+  private performCastling(from: Cell, to: Cell, king: King): boolean {
+    const rookX = to.x > from.x ? to.x + 1 : to.x - 2;
+    const rookCell = this.board.getCell(rookX, to.y);
+
+    if (rookCell && rookCell.figure instanceof Rook && rookCell.figure.FirstMove) {
+      const rook = rookCell.figure;
+
+      
+      const rookToX = to.x > from.x ? to.x - 1 : to.x + 1;
+      const rookTo = this.board.getCell(rookToX, to.y);
+
+      
+      if (rookTo) {
+        
+        rookTo.setFigure(rook);
+        rookCell.setFigure(null); 
+        to.setFigure(king); 
+        from.setFigure(null); 
+        rook.FirstMove = false; 
+        return true;
+      }
+    }
+    return false; 
   }
 
   canMove(from: Cell, to: Cell): boolean {

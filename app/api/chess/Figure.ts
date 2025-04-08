@@ -17,6 +17,7 @@ export class Figure {
     name: FigureName;
     logo: string | null; 
     id: number;
+    FirstMove:boolean | null;
 
     constructor(color: Color, cell: Cell, logo: string | null = null) {
         this.color = color;
@@ -25,6 +26,7 @@ export class Figure {
         this.logo = logo;
         this.name = FigureName.FIGURE;
         this.id = Math.random();
+        this.FirstMove = true;
     }
 
 
@@ -33,5 +35,5 @@ export class Figure {
             return false
         return true;
     }
-    
+
 }
