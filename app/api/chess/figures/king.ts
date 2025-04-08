@@ -13,23 +13,43 @@ export class King extends Figure {
     }
     
     canMove(target: Cell): boolean {
-        if (!super.canMove(target))
+        if (!super.canMove(target)) 
             return false;
 
         const directionX = Math.abs(this.cell.x - target.x);
         const directionY = Math.abs(this.cell.y - target.y);
+        const castleY = this.color === Color.Black ? 0 : 7;
+    
+        if (
+            this.FirstMove &&
+            target.y === castleY &&
+            (target.x === 2 || target.x === 6)
+        ) {
+            const rookX = target.x === 2 ? 0 : 7;
+            const rookCell = this.cell.board.getCell(rookX, castleY);
+            const rook = rookCell?.figure;
 
-        const castleY = this.cell.figure?.color === Color.Black ? 0 : 7;
-        
-        if (this.FirstMove && target.y === castleY &&
-            this.cell.isEmptyX(target) && 
-            this.cell.board.getCell(target.x, target.y)?.isEmpty() &&
-            (target.x === 2 || target.x === 6)) {
-            const rookCell = this.cell.board.getCell(target.x === 2 ? 0 : 7, castleY);
-            const rook = rookCell?.figure as Rook;
+            if (
+                rook instanceof Rook &&
+                rook.color === this.color &&
+                rook.FirstMove
+            ) {
+                const pathIsClear = this.cell.isEmptyX(target);
+                if (!pathIsClear) return false;
+    
+               
+                const middleX = target.x === 2 ? 3 : 5;
+                const cellsToCheck = [
+                    this.cell.board.getCell(this.cell.x, castleY), 
+                    this.cell.board.getCell(middleX, castleY),     
+                    this.cell.board.getCell(target.x, castleY)    
+                ];
 
-            
-            if (rook && rook.FirstMove) {
+                for (const cell of cellsToCheck) {
+                    if (!cell || cell.isUnderAttack(this.color)) {
+                        return false;
+                    }
+                }
                 return true;
             }
         }

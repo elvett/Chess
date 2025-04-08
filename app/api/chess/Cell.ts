@@ -71,6 +71,20 @@ export class Cell {
     }
     return true;
   }
+  
+  isUnderAttack(color: Color): boolean {
+    for (let row of this.board.cells) {
+        for (let cell of row) {
+            const figure = cell.figure;
+            if (figure && figure.color !== color) {
+                if (figure.canMove(this)) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
 
   setFigure(figure: Figure | null): void {
     this.figure = figure;
