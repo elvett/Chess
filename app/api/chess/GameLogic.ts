@@ -1,30 +1,49 @@
 import { Board } from "./board";
-import { FigureName } from "./Figure";
+import { Figure, FigureName } from "./Figure";
 import { Color } from "./Color";
 import { Cell } from "./Cell";
 import { King } from "./figures/king";
 import { Rook } from "./figures/Rook";
+import { Pawn } from "./figures/Pawn";
+import { Queen } from "./figures/queen";
+import { bishop } from "./figures/bishop";
+import { Knight } from "./figures/knight";
 
 export class GameLogic {
   board: Board;
-  // moveHistory: MoveHistory[];
+  promptPromotion: ((from: Cell, to: Cell, onSelect: (figureName: FigureName) => void) => void) | null = null;
+
 
   constructor(board: Board) {
     this.board = board;
-    // this.moveHistory = [];
   }
 
-  moveFigure(from: Cell, to: Cell): boolean {
+  moveFigure(from: Cell, to: Cell, promotionType: FigureName | null = null): boolean {
     if (!from.figure || !this.canReallyMove(from, to)) {
       return false;
     }
 
     const movingFigure = from.figure;
 
+    if (movingFigure instanceof Pawn) {
+      const promotionY = movingFigure.color === Color.Black ? 7 : 0;
+      if (to.y === promotionY) {
+
+        if (this.promptPromotion) {
+          this.promptPromotion(from, to, (figureName: FigureName) => {
+            this.promotion(from, to, figureName);
+          });
+        } else {
+          this.promotion(from, to, promotionType ?? FigureName.Queen);
+        }
+        return true;
+      }
+    }
+
     if (movingFigure instanceof King) {
       movingFigure.FirstMove = false;
-      
-      if (this.isCastling(from, to,)) {
+
+      if (this.isCastling(from, to)) {
         return this.performCastling(from, to, movingFigure);
       }
     }
@@ -50,27 +69,54 @@ export class GameLogic {
     if (rookCell && rookCell.figure instanceof Rook && rookCell.figure.FirstMove) {
       const rook = rookCell.figure;
 
-      
       const rookToX = to.x > from.x ? to.x - 1 : to.x + 1;
       const rookTo = this.board.getCell(rookToX, to.y);
 
-      
       if (rookTo) {
-        
         rookTo.setFigure(rook);
-        rookCell.setFigure(null); 
-        to.setFigure(king); 
-        from.setFigure(null); 
-        rook.FirstMove = false; 
+        rookCell.setFigure(null);
+        to.setFigure(king);
+        from.setFigure(null);
+        rook.FirstMove = false;
         return true;
       }
     }
-    return false; 
+    return false;
   }
 
   canMove(from: Cell, to: Cell): boolean {
     return from.figure?.canMove(to) ?? false;
   }
+
+  promotion(from: Cell, to: Cell, figureName: FigureName): void {
+    let promotedFigure: Figure;
+
+    
+    const movingFigure = from.figure;
+    
+    if (!movingFigure) return;
+
+    switch (figureName) {
+      case FigureName.Queen:
+        promotedFigure = new Queen(movingFigure.color, to);
+        break;
+      case FigureName.Rook:
+        promotedFigure = new Rook(movingFigure.color, to);
+        break;
+      case FigureName.Bishop:
+        promotedFigure = new bishop(movingFigure.color, to);
+        break;
+      case FigureName.Knight:
+        promotedFigure = new Knight(movingFigure.color, to);
+        break;
+      default:
+        promotedFigure = new Queen(movingFigure.color, to);
+    }
+
+    
+    to.setFigure(promotedFigure);
+    from.setFigure(null);
+}
 
   isKingInCheck(playerColor: Color): boolean {
     const kingCell = this.findKing(playerColor);
@@ -103,14 +149,14 @@ export class GameLogic {
             if (!to) continue;
 
             if (this.canReallyMove(from, to)) {
-              return false; 
+              return false;
             }
           }
         }
       }
     }
 
-    return true; 
+    return true;
   }
 
   private findKing(playerColor: Color): Cell | null {
@@ -132,7 +178,7 @@ export class GameLogic {
 
     const currentFigure = from.figure;
     const capturedFigure = target.figure;
-  
+
     target.setFigure(currentFigure);
     from.setFigure(null);
 
