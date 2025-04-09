@@ -34,7 +34,7 @@ const App: React.FC = () => {
     newBoard.addFigures();
     setBoard(newBoard);
     const newGameLogic = new GameLogic(newBoard);
-    newGameLogic.promptPromotion = (from, to, onSelect) => {
+    newGameLogic.promptPromotion = (from, to,) => {
       setPromotionFromCell(from);
       setPromotionToCell(to);
       setPromotionModalVisible(true);
