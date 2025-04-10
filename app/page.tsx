@@ -34,7 +34,7 @@ const App: React.FC = () => {
     newBoard.addFigures();
     setBoard(newBoard);
     const newGameLogic = new GameLogic(newBoard);
-    newGameLogic.promptPromotion = (from, to,) => {
+    newGameLogic.promptPromotion = (from, to) => {
       setPromotionFromCell(from);
       setPromotionToCell(to);
       setPromotionModalVisible(true);
@@ -142,12 +142,9 @@ const App: React.FC = () => {
       const opponentColor = currentPlayer.color === Color.White ? Color.Black : Color.White;
       const isMate = newLogic.isCheckmate(opponentColor);
       if (isMate) {
-        setWinner(currentPlayer.color);
-      } else {
-        swapPlayer();
-      }
+        setWinner(currentPlayer.color);      } 
     },
-    [promotionFromCell, promotionToCell, gameLogic, board, currentPlayer, swapPlayer]
+    [promotionFromCell, promotionToCell, gameLogic, board, currentPlayer]
   );
 
   const handleTimeout = useCallback((loserColor: Color) => {
