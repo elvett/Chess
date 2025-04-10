@@ -23,6 +23,8 @@ const App: React.FC = () => {
   const [promotionModalVisible, setPromotionModalVisible] = useState(false);
   const [promotionFromCell, setPromotionFromCell] = useState<Cell | null>(null);
   const [promotionToCell, setPromotionToCell] = useState<Cell | null>(null);
+  const [history, setHistory] = useState<string[]>([]);
+  const [isViewingHistory, setIsViewingHistory] = useState(false);
 
   useEffect(() => {
     restart();
@@ -46,7 +48,9 @@ const App: React.FC = () => {
     setCurrentPlayer(whitePlayer);
     setWinner(null);
     setTurn(0);
+    setHistory([]);
     setPromotionModalVisible(false);
+    setIsViewingHistory(false);
   }, [whitePlayer]);
 
   const swapPlayer = useCallback(() => {
@@ -56,7 +60,7 @@ const App: React.FC = () => {
 
   const handleCellClick = useCallback(
     (cell: Cell) => {
-      if (!board || !currentPlayer || !gameLogic || winner) return;
+      if (!board || !gameLogic || winner || isViewingHistory) return;
 
       if (!selectedCell) {
         selectCell(cell);
@@ -91,7 +95,8 @@ const App: React.FC = () => {
               setWinner(currentPlayer.color);
               return;
             }
-
+            const fen = board.generateFEN(currentPlayer, turn);
+            setHistory((prevHistory) => [...prevHistory, fen]);
             swapPlayer();
           }
         }
@@ -99,12 +104,12 @@ const App: React.FC = () => {
         selectCell(cell);
       }
     },
-    [board, currentPlayer, selectedCell, swapPlayer, gameLogic, winner, promotionModalVisible]
+    [board, currentPlayer, selectedCell, swapPlayer, gameLogic, winner, promotionModalVisible, isViewingHistory]
   );
 
   const selectCell = useCallback(
     (cell: Cell) => {
-      if (!board || !currentPlayer || !gameLogic) return;
+      if (!board || !currentPlayer || !gameLogic || isViewingHistory) return;
 
       if (cell.figure && cell.figure.color === currentPlayer.color) {
         const moves = board.cells.flat().filter((target) => gameLogic.canReallyMove(cell, target));
@@ -118,7 +123,7 @@ const App: React.FC = () => {
         setAttackMoves([]);
       }
     },
-    [board, currentPlayer, gameLogic]
+    [board, currentPlayer, gameLogic, isViewingHistory]
   );
 
   const handlePromotionSelect = useCallback(
@@ -142,7 +147,8 @@ const App: React.FC = () => {
       const opponentColor = currentPlayer.color === Color.White ? Color.Black : Color.White;
       const isMate = newLogic.isCheckmate(opponentColor);
       if (isMate) {
-        setWinner(currentPlayer.color);      } 
+        setWinner(currentPlayer.color);
+      }
     },
     [promotionFromCell, promotionToCell, gameLogic, board, currentPlayer]
   );
@@ -150,6 +156,29 @@ const App: React.FC = () => {
   const handleTimeout = useCallback((loserColor: Color) => {
     setWinner(loserColor === Color.White ? Color.Black : Color.White);
   }, []);
+
+  const handleHistoryClick = useCallback(
+    (fen: string, index: number) => {
+      const newBoard = new Board();
+      newBoard.loadFromFEN(fen);
+      setBoard(newBoard);
+
+      const newGameLogic = new GameLogic(newBoard);
+      setGameLogic(newGameLogic);
+      setSelectedCell(null);
+      setAvailableMoves([]);
+      setAttackMoves([]);
+     
+      if (index === history.length - 1) {
+        setIsViewingHistory(false);
+             setCurrentPlayer(history.length % 2 === 0 ? whitePlayer : blackPlayer);
+        setTurn(Math.floor(history.length / 2));
+      } else {
+        setIsViewingHistory(true);
+      }
+    },
+    [history, whitePlayer, blackPlayer]
+  );
 
   if (!board) return <div className="loading">Loading chess game...</div>;
 
@@ -243,7 +272,7 @@ const App: React.FC = () => {
                     alignItems: "center",
                     justifyContent: "center",
                     border: selectedCell === cell ? "4px solid #f1c40f" : "1px solid #2c3e50",
-                    cursor: "pointer",
+                    cursor: isViewingHistory ? "default" : "pointer",
                     transition: "all 0.2s ease",
                     position: "relative",
                   }}
@@ -297,13 +326,49 @@ const App: React.FC = () => {
       >
         <Timer currentPlayer={currentPlayer} restart={restart} winner={winner} onTimeout={handleTimeout} />
       </div>
-
       {/* Promotion Modal */}
       <PromotionModal
         visible={promotionModalVisible}
         color={currentPlayer.color}
         onSelect={handlePromotionSelect}
       />
+      
+
+      <div
+        style={{
+          position: "absolute",
+          right: "20px",
+          top: "20px",
+          backgroundColor: "#34495e",
+          padding: "10px 20px",
+          borderRadius: "15px",
+          boxShadow: "0 4px 15px rgba(0,0,0,0.3)",
+          maxHeight: "80%",
+          overflowY: "auto",
+          color: "#ecf0f1",
+          width: "300px",
+        }}
+      >
+        <h3 style={{ marginBottom: "10px", textAlign: "center" }}>Move History (FEN)</h3>
+        <ul style={{ listStyleType: "none", paddingLeft: "0" }}>
+          {history.map((fen, index) => (
+            <li
+              key={index}
+              onClick={() => handleHistoryClick(fen, index)}
+              style={{
+                padding: "5px",
+                cursor: "pointer",
+                borderBottom: "1px solid #7f8c8d",
+                color: "#ecf0f1",
+                fontSize: "14px",
+                backgroundColor: index === history.length - 1 && !isViewingHistory ? "#2ecc71" : "transparent", 
+              }}
+            >
+              {fen}
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 };
