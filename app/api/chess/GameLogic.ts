@@ -8,11 +8,12 @@ import { Pawn } from "./figures/Pawn";
 import { Queen } from "./figures/queen";
 import { bishop } from "./figures/bishop";
 import { Knight } from "./figures/knight";
+import { Player } from "./Player";
 
 export class GameLogic {
   board: Board;
   promptPromotion: ((from: Cell, to: Cell, onSelect: (figureName: FigureName) => void) => void) | null = null;
-
+  private positionHistory: Map<string, number> = new Map();
 
   constructor(board: Board) {
     this.board = board;
@@ -24,6 +25,9 @@ export class GameLogic {
     }
   
     const movingFigure = from.figure;
+    const positionKey = this.getPositionKey();
+    const count = (this.positionHistory.get(positionKey) || 0) + 1;
+    this.positionHistory.set(positionKey, count);
   
     if (
       movingFigure instanceof Pawn &&
@@ -215,5 +219,40 @@ export class GameLogic {
     target.setFigure(capturedFigure);
 
     return !isInCheck;
+  }
+
+  isStalemate(playerColor: Color): boolean {
+    if (this.isKingInCheck(playerColor)) return false;
+
+    for (let x = 0; x < 8; x++) {
+      for (let y = 0; y < 8; y++) {
+        const from = this.board.getCell(x, y);
+        if (!from || !from.figure || from.figure.color !== playerColor) continue;
+
+        for (let dx = 0; dx < 8; dx++) {
+          for (let dy = 0; dy < 8; dy++) {
+            const to = this.board.getCell(dx, dy);
+            if (!to) continue;
+
+            if (this.canReallyMove(from, to)) {
+              return false;
+            }
+          }
+        }
+      }
+    }
+
+    return true;
+  }
+
+  private getPositionKey(): string {
+    return this.board.generateFEN(new Player(this.board.cells[0][0].figure?.color || Color.White), 0);
+  }
+
+  isThreefoldRepetition(): boolean {
+    const positionKey = this.getPositionKey();
+    const count = (this.positionHistory.get(positionKey) || 0) + 1;
+    this.positionHistory.set(positionKey, count);
+    return count >= 3;
   }
 }

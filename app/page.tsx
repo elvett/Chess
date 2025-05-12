@@ -19,6 +19,7 @@ const App: React.FC = () => {
   const [currentPlayer, setCurrentPlayer] = useState<Player>(whitePlayer);
   const [gameLogic, setGameLogic] = useState<GameLogic | null>(null);
   const [winner, setWinner] = useState<Color | null>(null);
+  const [isDraw, setIsDraw] = useState(false);
   const [turn, setTurn] = useState(0);
   const [promotionModalVisible, setPromotionModalVisible] = useState(false);
   const [promotionFromCell, setPromotionFromCell] = useState<Cell | null>(null);
@@ -60,7 +61,7 @@ const App: React.FC = () => {
 
   const handleCellClick = useCallback(
     (cell: Cell) => {
-      if (!board || !gameLogic || winner || isViewingHistory) return;
+      if (!board || !gameLogic || winner || isDraw || isViewingHistory) return;
 
       if (!selectedCell) {
         selectCell(cell);
@@ -91,10 +92,19 @@ const App: React.FC = () => {
 
             const opponentColor = currentPlayer.color === Color.White ? Color.Black : Color.White;
             const isMate = newLogic.isCheckmate(opponentColor);
+            const isStalemate = newLogic.isStalemate(opponentColor);
+            const isThreefold = newLogic.isThreefoldRepetition();
+
             if (isMate) {
               setWinner(currentPlayer.color);
               return;
             }
+
+            if (isStalemate || isThreefold) {
+              setIsDraw(true);
+              return;
+            }
+
             const fen = board.generateFEN(currentPlayer, turn);
             setHistory((prevHistory) => [...prevHistory, fen]);
             swapPlayer();
@@ -104,7 +114,7 @@ const App: React.FC = () => {
         selectCell(cell);
       }
     },
-    [board, currentPlayer, selectedCell, swapPlayer, gameLogic, winner, promotionModalVisible, isViewingHistory]
+    [board, currentPlayer, selectedCell, swapPlayer, gameLogic, winner, isDraw, promotionModalVisible, isViewingHistory]
   );
 
   const selectCell = useCallback(
@@ -222,7 +232,21 @@ const App: React.FC = () => {
             {winner === Color.White ? "White" : "Black"} wins!
           </h2>
         )}
-        {!winner && (
+        {isDraw && (
+          <h2
+            style={{
+              color: "#f1c40f",
+              backgroundColor: "#2c3e50",
+              padding: "10px 20px",
+              borderRadius: "15px",
+              marginBottom: "10px",
+              boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
+            }}
+          >
+            Game ended in a draw!
+          </h2>
+        )}
+        {!winner && !isDraw && (
           <h2
             style={{
               color: "#ecf0f1",
