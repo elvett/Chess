@@ -22,13 +22,32 @@ export class GameLogic {
     if (!from.figure || !this.canReallyMove(from, to)) {
       return false;
     }
-
+  
     const movingFigure = from.figure;
-
+  
+    if (
+      movingFigure instanceof Pawn &&
+      from.x !== to.x &&
+      to.isEmpty()
+    ) {
+      const direction = movingFigure.color === Color.Black ? -1 : 1;
+      const capturedPawnCell = this.board.getCell(to.x, to.y + direction);
+      if (
+        capturedPawnCell?.figure instanceof Pawn &&
+        capturedPawnCell.figure.color !== movingFigure.color &&
+        capturedPawnCell.figure.enPassantable
+      ) {
+        capturedPawnCell.setFigure(null);
+      }
+    }
+  
     if (movingFigure instanceof Pawn) {
+      const dy = to.y - from.y;
       const promotionY = movingFigure.color === Color.Black ? 7 : 0;
+  
+      movingFigure.enPassantable = Math.abs(dy) === 2;
+  
       if (to.y === promotionY) {
-
         if (this.promptPromotion) {
           this.promptPromotion(from, to, (figureName: FigureName) => {
             this.promotion(from, to, figureName);
@@ -39,24 +58,32 @@ export class GameLogic {
         return true;
       }
     }
-
+  
     if (movingFigure instanceof King) {
       movingFigure.FirstMove = false;
-
+  
       if (this.isCastling(from, to)) {
         return this.performCastling(from, to, movingFigure);
       }
     }
-
+  
     if (movingFigure instanceof Rook) {
       movingFigure.FirstMove = false;
     }
-
+  
     to.setFigure(movingFigure);
     from.setFigure(null);
 
+    this.board.cells.flat().forEach(cell => {
+      const fig = cell.figure;
+      if (fig instanceof Pawn && fig !== movingFigure) {
+        fig.enPassantable = false;
+      }
+    });
+  
     return true;
   }
+  
 
   private isCastling(from: Cell, to: Cell): boolean {
     return to.x === from.x + 2 || to.x === from.x - 2;
