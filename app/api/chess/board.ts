@@ -93,7 +93,7 @@ export class Board {
     }
 
     loadFromFEN(fen: string) {
-        const [position, turn, castling, enPassant, moveCount] = fen.split(" ");
+        const [position, castling, enPassant,] = fen.split(" ");
         const rows = position.split("/"); 
         this.initCells(); 
 
