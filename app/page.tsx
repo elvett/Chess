@@ -26,6 +26,8 @@ const App: React.FC = () => {
   const [promotionToCell, setPromotionToCell] = useState<Cell | null>(null);
   const [history, setHistory] = useState<string[]>([]);
   const [isViewingHistory, setIsViewingHistory] = useState(false);
+ 
+
 
   useEffect(() => {
     restart();
@@ -350,14 +352,15 @@ const App: React.FC = () => {
       >
         <Timer currentPlayer={currentPlayer} restart={restart} winner={winner} onTimeout={handleTimeout} />
       </div>
+
       {/* Promotion Modal */}
       <PromotionModal
         visible={promotionModalVisible}
         color={currentPlayer.color}
         onSelect={handlePromotionSelect}
       />
-      
 
+      {/* Move History */}
       <div
         style={{
           position: "absolute",
@@ -385,7 +388,7 @@ const App: React.FC = () => {
                 borderBottom: "1px solid #7f8c8d",
                 color: "#ecf0f1",
                 fontSize: "14px",
-                backgroundColor: index === history.length - 1 && !isViewingHistory ? "#2ecc71" : "transparent", 
+                backgroundColor: index === history.length - 1 && !isViewingHistory ? "#2ecc71" : "transparent",
               }}
             >
               {fen}

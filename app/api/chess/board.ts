@@ -52,13 +52,49 @@ export class Board {
             if (y < 7) fen += "/";
         }
 
-        fen += ` ${turncolor} - - - ${Math.floor(moveCount) + 1}`;
+   
+        let castlingRights = "";
+        const whiteKing = this.getCell(4, 7)?.figure;
+        const blackKing = this.getCell(4, 0)?.figure;
+        const whiteRookLeft = this.getCell(0, 7)?.figure;
+        const whiteRookRight = this.getCell(7, 7)?.figure;
+        const blackRookLeft = this.getCell(0, 0)?.figure;
+        const blackRookRight = this.getCell(7, 0)?.figure;
+
+        if (whiteKing instanceof King && whiteKing.FirstMove) {
+            if (whiteRookLeft instanceof Rook && whiteRookLeft.FirstMove) castlingRights += "Q";
+            if (whiteRookRight instanceof Rook && whiteRookRight.FirstMove) castlingRights += "K";
+        }
+        if (blackKing instanceof King && blackKing.FirstMove) {
+            if (blackRookLeft instanceof Rook && blackRookLeft.FirstMove) castlingRights += "q";
+            if (blackRookRight instanceof Rook && blackRookRight.FirstMove) castlingRights += "k";
+        }
+        if (!castlingRights) castlingRights = "-";
+
+      
+        let enPassant = "-";
+        const enPassantPawns = this.cells.flat().filter(cell => 
+            cell.figure instanceof Pawn && cell.figure.enPassantable
+        );
+        if (enPassantPawns.length > 0) {
+            const pawn = enPassantPawns[0];
+            const direction = pawn.figure?.color === Color.Black ? -1 : 1;
+            enPassant = this.getCellCoordinates(pawn.x, pawn.y + direction);
+        }
+
+        fen += ` ${turncolor} ${castlingRights} ${enPassant} ${Math.floor(moveCount) + 1}`;
 
         return fen;
     }
 
+    private getCellCoordinates(x: number, y: number): string {
+        const files = "abcdefgh";
+        return `${files[x]}${8 - y}`;
+    }
+
     loadFromFEN(fen: string) {
-        const rows = fen.split(" ")[0].split("/"); 
+        const [position, turn, castling, enPassant, moveCount] = fen.split(" ");
+        const rows = position.split("/"); 
         this.initCells(); 
 
         for (let i = 0; i < 8; i++) {
@@ -80,6 +116,59 @@ export class Board {
             }
         }
 
+
+        if (castling !== "-") {
+            const whiteKing = this.getCell(4, 7)?.figure;
+            const blackKing = this.getCell(4, 0)?.figure;
+            const whiteRookLeft = this.getCell(0, 7)?.figure;
+            const whiteRookRight = this.getCell(7, 7)?.figure;
+            const blackRookLeft = this.getCell(0, 0)?.figure;
+            const blackRookRight = this.getCell(7, 0)?.figure;
+
+            if (whiteKing instanceof King) {
+                whiteKing.FirstMove = castling.includes("K") || castling.includes("Q");
+            }
+            if (blackKing instanceof King) {
+                blackKing.FirstMove = castling.includes("k") || castling.includes("q");
+            }
+
+            if (whiteRookLeft instanceof Rook) {
+                whiteRookLeft.FirstMove = castling.includes("Q");
+            }
+            if (whiteRookRight instanceof Rook) {
+                whiteRookRight.FirstMove = castling.includes("K");
+            }
+            if (blackRookLeft instanceof Rook) {
+                blackRookLeft.FirstMove = castling.includes("q");
+            }
+            if (blackRookRight instanceof Rook) {
+                blackRookRight.FirstMove = castling.includes("k");
+            }
+        }
+
+        if (enPassant !== "-") {
+            const files = "abcdefgh";
+            const x = files.indexOf(enPassant[0]);
+            const y = 8 - parseInt(enPassant[1]);
+            const cell = this.getCell(x, y);
+            if (cell?.figure instanceof Pawn) {
+                cell.figure.enPassantable = true;
+            }
+        }
+    }
+
+    private getFENSymbol(figure: Figure): string {
+        const map: Record<string, string> = {
+            [FigureName.Pawn]: "p",
+            [FigureName.Rook]: "r",
+            [FigureName.Knight]: "n",
+            [FigureName.Bishop]: "b",
+            [FigureName.Queen]: "q",
+            [FigureName.King]: "k",
+        };
+
+        const symbol = map[figure.name];
+        return figure.color === Color.White ? symbol.toUpperCase() : symbol;
     }
 
     private createFigureFromFEN(fenChar: string, row: number, col: number): Figure | null {
@@ -105,19 +194,6 @@ export class Board {
         }
     }
 
-    private getFENSymbol(figure: Figure): string {
-        const map: Record<string, string> = {
-            [FigureName.Pawn]: "p",
-            [FigureName.Rook]: "r",
-            [FigureName.Knight]: "n",
-            [FigureName.Bishop]: "b",
-            [FigureName.Queen]: "q",
-            [FigureName.King]: "k",
-        };
-
-        const symbol = map[figure.name];
-        return figure.color === Color.White ? symbol.toUpperCase() : symbol;
-    }
     private addPawns() {
         for (let i = 0; i < 8; i++) {
             new Pawn(Color.Black, this.getCell(i, 1)!);
