@@ -8,6 +8,7 @@ import { FigureName } from "./api/chess/Figure";
 import Timer from "./components/chess/timer";
 import { GameLogic } from "./api/chess/GameLogic";
 import PromotionModal from "./components/chess/promotion";
+import ChessAnalyzer from "./components/chess/ChessAnalyzer";
 
 const App: React.FC = () => {
   const [board, setBoard] = useState<Board | null>(null);
@@ -26,6 +27,7 @@ const App: React.FC = () => {
   const [promotionToCell, setPromotionToCell] = useState<Cell | null>(null);
   const [history, setHistory] = useState<string[]>([]);
   const [isViewingHistory, setIsViewingHistory] = useState(false);
+  const [currentFEN, setCurrentFEN] = useState<string>("");
  
 
 
@@ -45,6 +47,7 @@ const App: React.FC = () => {
       setPromotionModalVisible(true);
     };
     setGameLogic(newGameLogic);
+    setCurrentFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
     setSelectedCell(null);
     setAvailableMoves([]);
     setAttackMoves([]);
@@ -109,6 +112,8 @@ const App: React.FC = () => {
 
             const fen = board.generateFEN(currentPlayer, turn);
             setHistory((prevHistory) => [...prevHistory, fen]);
+            setCurrentFEN(fen);
+            console.log(currentFEN)
             swapPlayer();
           }
         }
@@ -208,149 +213,204 @@ const App: React.FC = () => {
         position: "relative",
       }}
     >
-      {/* Chess Board */}
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-        <h1
-          style={{
-            fontFamily: "'Segoe UI', sans-serif",
-            color: "#ecf0f1",
-            textShadow: "1px 1px 2px rgba(0,0,0,0.3)",
-            marginBottom: "15px",
-          }}
-        >
-          Chess Game
-        </h1>
-        {winner && (
-          <h2
+      {/* Общий flex-контейнер для панели управления, доски и анализатора */}
+      <div style={{ display: "flex", flexDirection: "row", alignItems: "flex-start", gap: "40px" }}>
+        {/* Левая колонка: Анализатор над таймером */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+          {/* Анализатор — отдельный тёмный блок */}
+          <div
             style={{
-              color: "#e74c3c",
-              backgroundColor: "#2c3e50",
-              padding: "10px 20px",
+              backgroundColor: "#222f3e",
               borderRadius: "15px",
-              marginBottom: "10px",
-              boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
-            }}
-          >
-            {winner === Color.White ? "White" : "Black"} wins!
-          </h2>
-        )}
-        {isDraw && (
-          <h2
-            style={{
-              color: "#f1c40f",
-              backgroundColor: "#2c3e50",
-              padding: "10px 20px",
-              borderRadius: "15px",
-              marginBottom: "10px",
-              boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
-            }}
-          >
-            Game ended in a draw!
-          </h2>
-        )}
-        {!winner && !isDraw && (
-          <h2
-            style={{
+              boxShadow: "0 4px 15px rgba(0,0,0,0.3)",
+              minWidth: "320px",
+              maxWidth: "350px",
+              padding: "24px 18px",
+              marginBottom: "0px",
               color: "#ecf0f1",
-              backgroundColor: "#34495e",
-              padding: "8px 16px",
-              borderRadius: "20px",
-              margin: 0,
-              boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
-              marginBottom: "15px",
-              textAlign: "center",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "stretch"
             }}
           >
-            Turn: {currentPlayer.color === Color.White ? "White" : "Black"} {turn}
-          </h2>
-        )}
+            <ChessAnalyzer fen={currentFEN}/>
+          </div>
+          {/*timer */}
+          <div
+            style={{
+              backgroundColor: "#222f3e",
+              borderRadius: "15px",
+              boxShadow: "0 4px 15px rgba(0,0,0,0.3)",
+              minWidth: "320px",
+              maxWidth: "350px",
+              padding: "24px 18px",
+              color: "#ecf0f1",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "stretch"
+            }}
+          >
+            <Timer currentPlayer={currentPlayer} restart={restart} winner={winner} onTimeout={handleTimeout} />
+          </div>
+        </div>
+
+        {/* Chess Board */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+          <h1
+            style={{
+              fontFamily: "'Segoe UI', sans-serif",
+              color: "#ecf0f1",
+              textShadow: "1px 1px 2px rgba(0,0,0,0.3)",
+              marginBottom: "15px",
+            }}
+          >
+            Chess Game
+          </h1>
+          {winner && (
+            <h2
+              style={{
+                color: "#e74c3c",
+                backgroundColor: "#2c3e50",
+                padding: "10px 20px",
+                borderRadius: "15px",
+                marginBottom: "10px",
+                boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
+              }}
+            >
+              {winner === Color.White ? "White" : "Black"} wins!
+            </h2>
+          )}
+          {isDraw && (
+            <h2
+              style={{
+                color: "#f1c40f",
+                backgroundColor: "#2c3e50",
+                padding: "10px 20px",
+                borderRadius: "15px",
+                marginBottom: "10px",
+                boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
+              }}
+            >
+              Game ended in a draw!
+            </h2>
+          )}
+          {!winner && !isDraw && (
+            <h2
+              style={{
+                color: "#ecf0f1",
+                backgroundColor: "#34495e",
+                padding: "8px 16px",
+                borderRadius: "20px",
+                margin: 0,
+                boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
+                marginBottom: "15px",
+                textAlign: "center",
+              }}
+            >
+              Turn: {currentPlayer.color === Color.White ? "White" : "Black"} {turn}
+            </h2>
+          )}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: `repeat(8, ${cellSize}px)`,
+              gap: "2px",
+              border: "4px solid #34495e",
+              padding: "4px",
+              backgroundColor: "#7f8c8d",
+              borderRadius: "8px",
+              boxShadow: "0 5px 15px rgba(0,0,0,0.3)",
+            }}
+          >
+            {board.cells.map((row, rowIndex) =>
+              row.map((cell, cellIndex) => {
+                const isAvailableMove = availableMoves.includes(cell);
+                const isAttackMove = attackMoves.includes(cell);
+                return (
+                  <div
+                    key={`${rowIndex}-${cellIndex}`}
+                    onClick={() => handleCellClick(cell)}
+                    style={{
+                      width: `${cellSize}px`,
+                      height: `${cellSize}px`,
+                      backgroundColor: isAttackMove
+                        ? "#e74c3c"
+                        : isAvailableMove
+                        ? "#2ecc71"
+                        : cell.color === "white"
+                        ? "#bdc3c7"
+                        : "#34495e",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      border: selectedCell === cell ? "4px solid #f1c40f" : "1px solid #2c3e50",
+                      cursor: isViewingHistory ? "default" : "pointer",
+                      transition: "all 0.2s ease",
+                      position: "relative",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (isAvailableMove || isAttackMove) {
+                        e.currentTarget.style.transform = "scale(1.05)";
+                        e.currentTarget.style.boxShadow = "0 2px 5px rgba(0,0,0,0.2)";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = "scale(1)";
+                      e.currentTarget.style.boxShadow = "none";
+                    }}
+                  >
+                    {cell.figure?.logo && (
+                      <img
+                        src={cell.figure.logo}
+                        alt={cell.figure.name}
+                        style={{
+                          width: `${cellSize * 0.7}px`,
+                          height: `${cellSize * 0.7}px`,
+                          transition: "transform 0.2s ease",
+                        }}
+                      />
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+        {/* Movehistory*/}
         <div
           style={{
-            display: "grid",
-            gridTemplateColumns: `repeat(8, ${cellSize}px)`,
-            gap: "2px",
-            border: "4px solid #34495e",
-            padding: "4px",
-            backgroundColor: "#7f8c8d",
-            borderRadius: "8px",
-            boxShadow: "0 5px 15px rgba(0,0,0,0.3)",
+            backgroundColor: "#34495e",
+            padding: "10px 20px",
+            borderRadius: "15px",
+            boxShadow: "0 4px 15px rgba(0,0,0,0.3)",
+            maxHeight: "500px",
+            overflowY: "auto",
+            color: "#ecf0f1",
+            width: "300px",
+            marginLeft: "0px"
           }}
         >
-          {board.cells.map((row, rowIndex) =>
-            row.map((cell, cellIndex) => {
-              const isAvailableMove = availableMoves.includes(cell);
-              const isAttackMove = attackMoves.includes(cell);
-              return (
-                <div
-                  key={`${rowIndex}-${cellIndex}`}
-                  onClick={() => handleCellClick(cell)}
-                  style={{
-                    width: `${cellSize}px`,
-                    height: `${cellSize}px`,
-                    backgroundColor: isAttackMove
-                      ? "#e74c3c"
-                      : isAvailableMove
-                      ? "#2ecc71"
-                      : cell.color === "white"
-                      ? "#bdc3c7"
-                      : "#34495e",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    border: selectedCell === cell ? "4px solid #f1c40f" : "1px solid #2c3e50",
-                    cursor: isViewingHistory ? "default" : "pointer",
-                    transition: "all 0.2s ease",
-                    position: "relative",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (isAvailableMove || isAttackMove) {
-                      e.currentTarget.style.transform = "scale(1.05)";
-                      e.currentTarget.style.boxShadow = "0 2px 5px rgba(0,0,0,0.2)";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = "scale(1)";
-                    e.currentTarget.style.boxShadow = "none";
-                  }}
-                >
-                  {cell.figure?.logo && (
-                    <img
-                      src={cell.figure.logo}
-                      alt={cell.figure.name}
-                      style={{
-                        width: `${cellSize * 0.7}px`,
-                        height: `${cellSize * 0.7}px`,
-                        transition: "transform 0.2s ease",
-                      }}
-                    />
-                  )}
-                </div>
-              );
-            })
-          )}
+          <h3 style={{ marginBottom: "10px", textAlign: "center" }}>Move History (FEN)</h3>
+          <ul style={{ listStyleType: "none", paddingLeft: "0" }}>
+            {history.map((fen, index) => (
+              <li
+                key={index}
+                onClick={() => handleHistoryClick(fen, index)}
+                style={{
+                  padding: "5px",
+                  cursor: "pointer",
+                  borderBottom: "1px solid #7f8c8d",
+                  color: "#ecf0f1",
+                  fontSize: "14px",
+                  backgroundColor: index === history.length - 1 && !isViewingHistory ? "#2ecc71" : "transparent",
+                }}
+              >
+                {fen}
+              </li>
+            ))}
+          </ul>
         </div>
-      </div>
-
-      {/* Control Panel with Timer */}
-      <div
-        style={{
-          position: "absolute",
-          left: "20px",
-          top: "50%",
-          transform: "translateY(-50%)",
-          display: "flex",
-          flexDirection: "column",
-          gap: "20px",
-          padding: "30px",
-          backgroundColor: "#34495e",
-          borderRadius: "15px",
-          boxShadow: "0 4px 15px rgba(0,0,0,0.3)",
-          minWidth: "320px",
-          maxWidth: "350px",
-          height: "500px",
-        }}
-      >
-        <Timer currentPlayer={currentPlayer} restart={restart} winner={winner} onTimeout={handleTimeout} />
       </div>
 
       {/* Promotion Modal */}
@@ -359,43 +419,6 @@ const App: React.FC = () => {
         color={currentPlayer.color}
         onSelect={handlePromotionSelect}
       />
-
-      {/* Move History */}
-      <div
-        style={{
-          position: "absolute",
-          right: "20px",
-          top: "20px",
-          backgroundColor: "#34495e",
-          padding: "10px 20px",
-          borderRadius: "15px",
-          boxShadow: "0 4px 15px rgba(0,0,0,0.3)",
-          maxHeight: "80%",
-          overflowY: "auto",
-          color: "#ecf0f1",
-          width: "300px",
-        }}
-      >
-        <h3 style={{ marginBottom: "10px", textAlign: "center" }}>Move History (FEN)</h3>
-        <ul style={{ listStyleType: "none", paddingLeft: "0" }}>
-          {history.map((fen, index) => (
-            <li
-              key={index}
-              onClick={() => handleHistoryClick(fen, index)}
-              style={{
-                padding: "5px",
-                cursor: "pointer",
-                borderBottom: "1px solid #7f8c8d",
-                color: "#ecf0f1",
-                fontSize: "14px",
-                backgroundColor: index === history.length - 1 && !isViewingHistory ? "#2ecc71" : "transparent",
-              }}
-            >
-              {fen}
-            </li>
-          ))}
-        </ul>
-      </div>
     </div>
   );
 };

@@ -11,6 +11,7 @@ import { Player } from "./Player";
 
 export class Board {
     cells: Cell[][] = [];
+    halfmove:number =0;
 
     public initCells(): void {
         this.cells = [];
@@ -82,7 +83,7 @@ export class Board {
             enPassant = this.getCellCoordinates(pawn.x, pawn.y + direction);
         }
 
-        fen += ` ${turncolor} ${castlingRights} ${enPassant} ${Math.floor(moveCount) + 1}`;
+        fen += ` ${turncolor} ${castlingRights} ${enPassant} ${this.halfmove} ${Math.floor(moveCount) + 1}`;
 
         return fen;
     }
