@@ -10,7 +10,7 @@ import { GameLogic } from "./api/chess/GameLogic";
 import PromotionModal from "./components/chess/promotion";
 import ChessAnalyzer from "./components/chess/ChessAnalyzer";
 import axios from "axios";
-import { Pawn } from "./api/chess/figures/Pawn";
+
 
 const App: React.FC = () => {
   // Board state
@@ -331,10 +331,6 @@ const App: React.FC = () => {
     if (cell.figure && cell.figure.color === currentPlayer.color) {
       setIsDragging(true);
       setDraggedCell(cell);
-      const moves = board.cells.flat().filter((target) => gameLogic.canReallyMove(cell, target));
-      const attacks = moves.filter((move) => move.figure !== null);
-      setAvailableMoves(moves);
-      setAttackMoves(attacks);
       e.dataTransfer.setData('text/plain', '');
       if (e.dataTransfer.setDragImage && cell.figure.logo) {
         const img = new Image();
