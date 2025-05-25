@@ -57,7 +57,7 @@ const App: React.FC = () => {
   ];
 
   const playMoveSound = useCallback(() => {
-    const audio = new Audio('/audio/move.mp3');
+    const audio = new Audio('./audio/move.mp3');
     audio.play().catch(error => {
       console.error('Error playing move sound:', error);
     });
@@ -331,6 +331,10 @@ const App: React.FC = () => {
     if (cell.figure && cell.figure.color === currentPlayer.color) {
       setIsDragging(true);
       setDraggedCell(cell);
+      const moves = board.cells.flat().filter((target) => gameLogic.canReallyMove(cell, target));
+      const attacks = moves.filter((move) => move.figure !== null);
+      setAvailableMoves(moves);
+      setAttackMoves(attacks);
       e.dataTransfer.setData('text/plain', '');
       if (e.dataTransfer.setDragImage && cell.figure.logo) {
         const img = new Image();
