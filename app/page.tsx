@@ -43,6 +43,8 @@ const App: React.FC = () => {
   const [isBotThinking, setIsBotThinking] = useState(false);
   const [botMove, setBotMove] = useState<{from: Cell | null, to: Cell | null}>({from: null, to: null});
   const [botDifficulty, setBotDifficulty] = useState<number>(5);
+  const [isBotVsBot, setIsBotVsBot] = useState(false);
+  
 
   // Drag and drop state
   const [draggedCell, setDraggedCell] = useState<Cell | null>(null);
@@ -172,7 +174,7 @@ const App: React.FC = () => {
   useEffect(() => {
     const makeBotMove = async () => {
       if (!isPlayingWithBot || !botColor || isBotThinking || winner || isDraw || isViewingHistory || !board) return;
-      if (currentPlayer.color === botColor) {
+      if (currentPlayer.color === botColor || isBotVsBot) {
         setIsBotThinking(true);
         try {
           const response = await axios.get('https://stockfish.online/api/s/v2.php', {
@@ -199,7 +201,7 @@ const App: React.FC = () => {
             const fromCell = board.cells[fromRank]?.[fromFile];
             const toCell = board.cells[toRank]?.[toFile];
 
-            if (fromCell && toCell && fromCell.figure && fromCell.figure.color === botColor) {
+            if (fromCell && toCell && fromCell.figure && fromCell.figure.color === currentPlayer.color) {
               setBotMove({from: fromCell, to: toCell});
               handleCellClick(fromCell);
             } else {
@@ -218,7 +220,7 @@ const App: React.FC = () => {
     };
 
     makeBotMove();
-  }, [currentPlayer, isPlayingWithBot, botColor, currentFEN, board, winner, isDraw, isViewingHistory, handleCellClick, botDifficulty]);
+  }, [currentPlayer, isPlayingWithBot, botColor, currentFEN, board, winner, isDraw, isViewingHistory, handleCellClick, botDifficulty, isBotVsBot]);
 
   // Bot move completion effect
   useEffect(() => {
@@ -322,6 +324,24 @@ const App: React.FC = () => {
 
   const stopBotGame = () => {
     setIsPlayingWithBot(false);
+    setBotColor(null);
+    setIsBotThinking(false);
+    setBotMove({from: null, to: null});
+    restart();
+  };
+
+  const startBotVsBotGame = () => {
+    setIsPlayingWithBot(true);
+    setIsBotVsBot(true);
+    setBotColor(Color.White); // First bot plays as white
+    setIsBotThinking(false);
+    setBotMove({from: null, to: null});
+    restart();
+  };
+
+  const stopBotVsBotGame = () => {
+    setIsPlayingWithBot(false);
+    setIsBotVsBot(false);
     setBotColor(null);
     setIsBotThinking(false);
     setBotMove({from: null, to: null});
@@ -546,11 +566,29 @@ const App: React.FC = () => {
                   >
                     Play as Black vs Bot
                   </button>
+                  <button
+                    onClick={startBotVsBotGame}
+                    style={{
+                      backgroundColor: "#9b59b6",
+                      color: "#ecf0f1",
+                      border: "none",
+                      padding: "8px 16px",
+                      borderRadius: "8px",
+                      cursor: "pointer",
+                      fontSize: "14px",
+                      transition: "background-color 0.2s",
+                      boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#8e44ad"}
+                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = "#9b59b6"}
+                  >
+                    Bot vs Bot
+                  </button>
                 </div>
               </>
             ) : (
               <button
-                onClick={stopBotGame}
+                onClick={isBotVsBot ? stopBotVsBotGame : stopBotGame}
                 style={{
                   backgroundColor: "#e74c3c",
                   color: "#ecf0f1",
@@ -565,7 +603,7 @@ const App: React.FC = () => {
                 onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#c0392b"}
                 onMouseOut={(e) => e.currentTarget.style.backgroundColor = "#e74c3c"}
               >
-                Stop Bot Game
+                Stop {isBotVsBot ? "Bot vs Bot" : "Bot"} Game
               </button>
             )}
           </div>
