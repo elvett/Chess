@@ -94,9 +94,10 @@ export class Board {
     }
 
     loadFromFEN(fen: string) {
-        const [position, castling, enPassant,] = fen.split(" ");
+        const [position, turn, castling, enPassant, halfmove, fullmove] = fen.split(" ");
         const rows = position.split("/"); 
         this.initCells(); 
+        this.halfmove = parseInt(halfmove) || 0;
 
         for (let i = 0; i < 8; i++) {
             const row = rows[i];

@@ -129,6 +129,7 @@ const App: React.FC = () => {
 
             const updatedBoard = new Board();
             updatedBoard.cells = board.cells;
+            updatedBoard.halfmove = board.halfmove;
             setBoard(updatedBoard);
             const newLogic = new GameLogic(updatedBoard);
             newLogic.promptPromotion = gameLogic.promptPromotion;
@@ -265,6 +266,7 @@ const App: React.FC = () => {
 
       const updatedBoard = new Board();
       updatedBoard.cells = board!.cells;
+      updatedBoard.halfmove = board!.halfmove;
       setBoard(updatedBoard);
       const newLogic = new GameLogic(updatedBoard);
       newLogic.promptPromotion = gameLogic.promptPromotion;
@@ -369,6 +371,7 @@ const App: React.FC = () => {
 
         const updatedBoard = new Board();
         updatedBoard.cells = board.cells;
+        updatedBoard.halfmove = board.halfmove;
         setBoard(updatedBoard);
         const newLogic = new GameLogic(updatedBoard);
         newLogic.promptPromotion = gameLogic.promptPromotion;

@@ -28,6 +28,12 @@ export class GameLogic {
     const positionKey = this.getPositionKey();
     const count = (this.positionHistory.get(positionKey) || 0) + 1;
     this.positionHistory.set(positionKey, count);
+
+    if (movingFigure instanceof Pawn || to.figure) {
+      this.board.halfmove = 0;
+    } else {
+      this.board.halfmove++;
+    }
   
     if (
       movingFigure instanceof Pawn &&
