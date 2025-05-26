@@ -42,7 +42,7 @@ const App: React.FC = () => {
   const [botColor, setBotColor] = useState<Color | null>(null);
   const [isBotThinking, setIsBotThinking] = useState(false);
   const [botMove, setBotMove] = useState<{from: Cell | null, to: Cell | null}>({from: null, to: null});
-  const [botDifficulty, setBotDifficulty] = useState<number>(5);
+  const [botDifficulty, setBotDifficulty] = useState<number>(8);
   const [isBotVsBot, setIsBotVsBot] = useState(false);
   
 
